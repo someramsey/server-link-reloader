@@ -10,7 +10,7 @@ const ALLOWED_USERS = process.env.ALLOWED_USERS.split(",");
 const SERVER_CONFIGURE_PAGE = process.env.SERVER_CONFIGURE_PAGE + "/" + process.env.SERVER_ID;
 const SERVER_CONFIGURATION_ENDPOINT = process.env.SERVER_CONFIGURATION_ENDPOINT + "/" + process.env.SERVER_ID;
 
-const browser = await puppeteer.launch({ headless: false, userDataDir: process.env.PUPPETEER_USERDATA_PATH });
+const browser = await puppeteer.launch({ headless: true, userDataDir: process.env.PUPPETEER_USERDATA_PATH });
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages] });
 
 client.once("ready", () => {
@@ -172,25 +172,26 @@ async function alert(message) {
 let minorAlertLevel = 0;
 
 async function update(updateMessage) {
+    if (!runtimeData.authToken) {
+        console.error("No auth token available");
+        alert("TOKEN ❌❌ 😭 👎👎");
+        clearInterval(updateInterval);
+        return;
+    }
+
+    const page = await browser.newPage();
+
     try {
-        if (!runtimeData.authToken) {
-            console.error("No auth token available");
-            alert("TOKEN ❌❌ 😭 👎👎");
-            clearInterval(updateInterval);
-            return;
-        }
-
-        const page = await browser.newPage();
-
         await page.goto('https://roblox.com');
         await page.setCookie({ "name": ".ROBLOSECURITY", "value": runtimeData.authToken, "domain": ".roblox.com", "session": false });
 
         await page.goto(SERVER_CONFIGURE_PAGE);
 
         if (page.url() !== SERVER_CONFIGURE_PAGE) {
-            console.error("Failed to login using token");
+            console.error("Failed to login using token, unexpected page url:", page.url());
             alert("TOKEN BOZUK 👎👎😭 🗣️🔥🔥");
             clearInterval(updateInterval);
+            page.close();
             return;
         }
 
@@ -203,10 +204,12 @@ async function update(updateMessage) {
                 alert("Ramseyi çağır 🙏🙏 💀❓ 👎👎😭 🗣️🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥");
                 clearInterval(updateInterval);
                 minorAlertLevel = 0;
+                page.close();
                 return;
             }
 
             minorAlertLevel++;
+            page.close();
             return;
         }
 
@@ -223,10 +226,12 @@ async function update(updateMessage) {
                         alert("Ramseyi çağır 🙏🙏 😱👆👇☝️👈👉 👎👎👎");
                         clearInterval(updateInterval);
                         minorAlertLevel = 0;
+                        page.close();
                         return;
                     }
 
                     minorAlertLevel++;
+                    page.close();
                     return;
                 }
 
@@ -240,14 +245,29 @@ async function update(updateMessage) {
                         alert("İşi batırdım, ramseyi çağır 🙏🙏 😱🙅‍♂️");
                         clearInterval(updateInterval);
                         minorAlertLevel = 0;
+                        page.close();
+                        return;
                     }
 
                     minorAlertLevel++;
+                    page.close();
+                    return;
                 }
 
 
                 minorAlertLevel = 0;
-                updateMessage.edit(body.link);
+                const messageContent = `| - - - | **About of Server** | - - - |
+
+You are succesfully added to the server ^^
+There is the link;
+[<${body.link}>]
+
+Dont forget, this vip server is for farming
+**NOT FOR CHEATING**
+
+*If you saw someone not following the rules, report him/her at #:round_pushpin:report channel*`
+                
+                updateMessage.edit(messageContent);
 
                 console.log("Updated server link:", body.link);
                 page.close();
@@ -257,8 +277,9 @@ async function update(updateMessage) {
         await generateButton.click();
     } catch (error) {
         console.error("Failed to update server link unhandled error:", error);
-        alert("RAMSEYI ÇAĞIIIIR 🙏🙏🙏🙏🙏🙏 🚨🚨🚨\n||"+error+"||");
+        alert("RAMSEYI ÇAĞIIIIR 🙏🙏🙏🙏🙏🙏 🚨🚨🚨\n||" + error + "||");
         clearInterval(updateInterval);
+        page.close();
     }
 }
 
@@ -269,7 +290,7 @@ function startUpdateInterval() {
         }).catch(error => {
             console.error("[Interval] Failed to fetch update message, error:", error);
             clearInterval(updateInterval);
-            alert("Mesaj gitti 😱\n||`"+ error + '||');
+            alert("Mesaj gitti 😱\n||`" + error + '||');
         });
     }, process.env.DISCORD_BOT_UPDATE_INTERVAL);
 }
