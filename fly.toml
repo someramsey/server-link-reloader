@@ -1,0 +1,14 @@
+# fly.toml app configuration file generated for linkreloader on 2024-07-28T20:00:57+02:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'linkreloader'
+primary_region = 'cdg'
+
+[build]
+
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1

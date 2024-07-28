@@ -2,6 +2,7 @@ import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, Client, Gate
 import "dotenv/config";
 import fs from "fs";
 import puppeteer from "puppeteer";
+import { buildMessageContent } from "./message.js";
 
 let updateInterval;
 let runtimeData = loadRuntimeData();
@@ -10,7 +11,7 @@ const ALLOWED_USERS = process.env.ALLOWED_USERS.split(",");
 const SERVER_CONFIGURE_PAGE = process.env.SERVER_CONFIGURE_PAGE + "/" + process.env.SERVER_ID;
 const SERVER_CONFIGURATION_ENDPOINT = process.env.SERVER_CONFIGURATION_ENDPOINT + "/" + process.env.SERVER_ID;
 
-const browser = await puppeteer.launch({ headless: true, userDataDir: process.env.PUPPETEER_USERDATA_PATH });
+const browser = await puppeteer.launch({ headless: true, userDataDir: process.env.PUPPETEER_USERDATA_PATH, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages] });
 
 client.once("ready", () => {
@@ -182,7 +183,19 @@ async function update(updateMessage) {
     const page = await browser.newPage();
 
     try {
-        await page.goto('https://roblox.com');
+        let navigated = false;
+
+        try {
+            await page.goto('https://roblox.com');
+            navigated = true;
+        } catch(error) {
+            console.warn(error);
+        }
+
+        if(!navigated) {
+            return;
+        }
+
         await page.setCookie({ "name": ".ROBLOSECURITY", "value": runtimeData.authToken, "domain": ".roblox.com", "session": false });
 
         await page.goto(SERVER_CONFIGURE_PAGE);
@@ -256,17 +269,8 @@ async function update(updateMessage) {
 
 
                 minorAlertLevel = 0;
-                const messageContent = `| - - - | **About of Server** | - - - |
 
-You can now successfully join the server ^^
-Here is the link;
-[<${body.link}>]
-
-Dont forget, this vip server is for farming
-**NOT FOR CHEATING**
-
-*If you see someone not following the rules, you can report them at ${updateMessage.guild.channels.cache.get('1255292239605796985').toString()}`
-                
+                const messageContent = buildMessageContent(body.link, updateMessage.guild.channels.cache.get('1255292239605796985').toString());
                 updateMessage.edit(messageContent);
 
                 console.log("Updated server link:", body.link);

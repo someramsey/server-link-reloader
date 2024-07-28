@@ -14,5 +14,8 @@
     "dotenv": "^16.0.1",
     "express": "~4.16.1",
     "puppeteer": "^22.14.0"
+  },
+  "devDependencies": {
+    "@flydotio/dockerfile": "^0.5.8"
   }
 }
