@@ -258,14 +258,14 @@ async function update(updateMessage) {
                 minorAlertLevel = 0;
                 const messageContent = `| - - - | **About of Server** | - - - |
 
-You are succesfully added to the server ^^
-There is the link;
+You can now successfully join the server ^^
+Here is the link;
 [<${body.link}>]
 
 Dont forget, this vip server is for farming
 **NOT FOR CHEATING**
 
-*If you saw someone not following the rules, report him/her at #:round_pushpin:report channel*`
+*If you see someone not following the rules, you can report them at ${updateMessage.guild.channels.cache.get('1255292239605796985').toString()}`
                 
                 updateMessage.edit(messageContent);
 
