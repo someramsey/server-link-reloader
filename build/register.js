@@ -1,11 +1,7 @@
 import "dotenv/config";
 import { REST, Routes } from 'discord.js';
-
-const rest = new REST();
-rest.setToken(process.env.DISCORD_BOT_TOKEN);
-
+const rest = new REST({ version: '9' }).setToken(process.env.DISCORD_BOT_TOKEN);
 const route = Routes.applicationCommands(process.env.DISCORD_CLIENT_ID);
-
 const commands = [
     {
         name: 'init',

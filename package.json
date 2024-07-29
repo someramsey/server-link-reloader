@@ -5,8 +5,8 @@
   "private": true,
   "license": "MIT",
   "scripts": {
-    "start": "node ./src/index",
-    "register": "node ./src/register"
+    "start": "node ./build/index",
+    "register": "node ./build/register"
   },
   "dependencies": {
     "debug": "~2.6.9",
