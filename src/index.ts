@@ -1,8 +1,8 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, ChannelType, Client, CommandInteraction, GatewayIntentBits, Interaction, Message, ModalBuilder, ModalSubmitInteraction, TextInputBuilder, TextInputStyle } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, ChannelType, Client, CommandInteraction, GatewayIntentBits, Message, ModalBuilder, ModalSubmitInteraction, TextInputBuilder, TextInputStyle } from "discord.js";
 import "dotenv/config";
 import fs from "fs";
+import puppeteer from "puppeteer";
 import { updateMessageContent } from "./message.js";
-import puppeteer, { Page, Puppeteer } from "puppeteer";
 
 type RuntimeData = {
     channelId?: string;
@@ -17,7 +17,7 @@ const ALLOWED_USERS = process.env.ALLOWED_USERS.split(",");
 const SERVER_CONFIGURE_PAGE = process.env.SERVER_CONFIGURE_PAGE + "/" + process.env.SERVER_ID;
 const SERVER_CONFIGURATION_ENDPOINT = process.env.SERVER_CONFIGURATION_ENDPOINT + "/" + process.env.SERVER_ID;
 
-const browser = await puppeteer.launch({ headless: false, userDataDir: process.env.PUPPETEER_USERDATA_PATH, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+const browser = await puppeteer.launch({ headless: true, userDataDir: process.env.PUPPETEER_USERDATA_PATH, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages] });
 
 client.once("ready", () => {
