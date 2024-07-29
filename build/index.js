@@ -1,14 +1,12 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, Client, GatewayIntentBits, ModalBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
 import "dotenv/config";
 import fs from "fs";
-import puppeteer from "puppeteer";
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, Client, GatewayIntentBits, ModalBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
 import { updateMessageContent } from "./message.js";
+let minorAlertLevel = 0;
 let updateInterval;
 let runtimeData = loadRuntimeData();
 const ALLOWED_USERS = process.env.ALLOWED_USERS.split(",");
-const SERVER_CONFIGURE_PAGE = process.env.SERVER_CONFIGURE_PAGE + "/" + process.env.SERVER_ID;
 const SERVER_CONFIGURATION_ENDPOINT = process.env.SERVER_CONFIGURATION_ENDPOINT + "/" + process.env.SERVER_ID;
-const browser = await puppeteer.launch({ headless: true, userDataDir: process.env.PUPPETEER_USERDATA_PATH, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages] });
 client.once("ready", () => {
     console.log("Discord client ready");
@@ -132,6 +130,62 @@ async function handleCommand(interaction) {
         }
     }
 }
+async function update(updateMessage) {
+    if (!runtimeData.authToken) {
+        console.error("Auth token is missing");
+        alert("TOKEN YOK 😱🙅‍♂️🙅‍♂️👎👎👎");
+        return;
+    }
+    const createRequest = () => ({
+        method: "PATCH",
+        body: JSON.stringify({ newJoinCode: true }),
+        headers: {
+            'Content-Type': 'application/json',
+            'cookie': `.ROBLOSECURITY=${runtimeData.authToken}`,
+            'x-csrf-token': runtimeData.csrfToken || ""
+        }
+    });
+    const handleUnexpected = (error) => {
+        console.error("Update failed, unexpected error:", error);
+        if (minorAlertLevel == 2) {
+            minorAlertLevel = 0;
+            alert(`RAMSEYI ÇAĞIR 🙏🙏🙏 ❌❌🚨🚨🚨🚨\n||${error}||`);
+            return;
+        }
+        minorAlertLevel++;
+    };
+    fetch(SERVER_CONFIGURATION_ENDPOINT, createRequest()).then(async (response) => {
+        switch (response.status) {
+            case 200: return response.json();
+            //Unauthorized
+            case 401:
+                {
+                    console.error("Update request failed, response returned Unauthorized, probably due to invalid or outdated token");
+                    alert("TOKEN BOZUK YADA SÜRESİ DOLMUŞ 🙅‍♂️🙅‍♂️🙅‍♂️ 🤽🏾‍♂️");
+                }
+                break;
+            //CSRF handshake
+            case 403: {
+                console.warn("Initial update request returned 403, retrying with new CSRF token");
+                const csrf = response.headers.get("x-csrf-token");
+                if (!csrf) {
+                    console.error("Update request failed, response returned 403 but no CSRF token was provided");
+                    alert(`IMKANSIZ BIRŞEKILDE TERS BIŞEYLER TERS DÖNDÜ RAMSEYI ÇAĞIR 🙏🙏🙏 ❌❌🚨🚨🚨🚨\n||${JSON.stringify(response, undefined, 4)}||`);
+                    return;
+                }
+                runtimeData.csrfToken = csrf;
+                saveRuntimeData();
+                return fetch(SERVER_CONFIGURATION_ENDPOINT, createRequest()).then(response => response.json());
+            }
+        }
+    }).then(body => {
+        if (!body?.link) {
+            throw new Error("Update request failed, invalid response body:" + JSON.stringify(body, undefined, 4));
+        }
+        updateMessageContent(body.link, updateMessage);
+        console.log("Server link updated successfully: " + body.link);
+    }).catch(handleUnexpected);
+}
 async function alert(message) {
     ALLOWED_USERS.forEach(async (alertId) => {
         try {
@@ -146,97 +200,12 @@ async function alert(message) {
                 .setCustomId("dismiss-alert");
             const row = new ActionRowBuilder()
                 .addComponents(dismissButton);
-            await user.send({
-                content: message,
-                components: [row]
-            });
+            await user.send({ content: message, components: [row] });
         }
         catch (error) {
             console.error("Failed to send alert to user, error:", error);
         }
     });
-}
-let minorAlertLevel = 0;
-async function update(updateMessage) {
-    const interrupt = async (cause, requiredAlertLevel = 0) => {
-        if (minorAlertLevel >= requiredAlertLevel) {
-            alert(cause);
-            clearInterval(updateInterval);
-            minorAlertLevel = 0;
-            return;
-        }
-        minorAlertLevel++;
-    };
-    const navigateSafe = async (url) => {
-        try {
-            await page.goto(url);
-            return false;
-        }
-        catch (error) {
-            return true;
-        }
-    };
-    if (!runtimeData.authToken) {
-        console.error("Auth token missing");
-        interrupt("TOKEN YOK ❌❌ 😭 👎👎");
-        return;
-    }
-    if ((await browser.pages()).length > 2) {
-        console.error("Invalid state, some pages werent closed, possible corrupted state");
-        interrupt("RAMSEYI ÇAĞIIIIR 🙏🙏🙏🙏🙏🙏 🚨🚨🚨\n||Invalid state, some pages werent closed, possible corrupted state||", 2);
-        return;
-    }
-    const page = await browser.newPage();
-    try {
-        if (await navigateSafe('https://roblox.com')) {
-            console.warn("Initial navigation to roblox.com failed");
-            return;
-        }
-        await page.setCookie({ name: ".ROBLOSECURITY", value: runtimeData.authToken, domain: ".roblox.com" });
-        if (await navigateSafe(SERVER_CONFIGURE_PAGE) || page.url() !== SERVER_CONFIGURE_PAGE) {
-            console.error("Navigation to server page failed, possibly failed to login");
-            interrupt("TOKEN BOZUK 👎👎😭 🗣️🔥🔥", 1);
-            return;
-        }
-        const generateButton = await page.waitForSelector("#generate-link-button");
-        if (!generateButton) {
-            console.error("Selector for generate-link-button failed, possibly failed to load the page");
-            interrupt("Ramseyi çağır 🙏🙏 💀❓ 👎👎😭 🗣️🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥", 2);
-            return;
-        }
-        await new Promise(async (resolve, reject) => {
-            const timeout = setTimeout(() => {
-                reject("Failed to update server link generate request timed out");
-                interrupt("Ramseyi çağır 🙏🙏 🕒🕒🕒 🚨🚨🚨", 2);
-            }, 10000);
-            page.on("response", async (response) => {
-                if (response.url() !== SERVER_CONFIGURATION_ENDPOINT || response.request().method() !== "PATCH") {
-                    return;
-                }
-                if (response.status() !== 200) {
-                    reject("Failed to update server configuration, generate request failed status code:" + response.status());
-                    interrupt("Ramseyi çağır 🙏🙏 😱👆👇☝️👈👉 👎👎👎", 1);
-                    return;
-                }
-                const body = await response.json();
-                if (!body.link) {
-                    reject("Failed to update server configuration, invalid body:" + JSON.stringify(body));
-                    interrupt("Ramseyi çağır 🙏🙏 😱🙅‍♂️");
-                    return;
-                }
-                updateMessageContent(body.link, updateMessage);
-                clearTimeout(timeout);
-                console.log("Updated server link:", body.link);
-                resolve();
-            });
-            await generateButton.click();
-        }).catch(console.error);
-    }
-    catch (error) {
-        console.error("Unhandled Error while updating server link:", error);
-        interrupt("RAMSEYI ÇAĞIIIIR 🙏🙏🙏🙏🙏🙏 🚨🚨🚨\n||" + error + "||");
-    }
-    await page.close();
 }
 function startUpdateInterval() {
     updateInterval = setInterval(() => {

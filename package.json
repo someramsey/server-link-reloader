@@ -11,9 +11,7 @@
   "dependencies": {
     "debug": "~2.6.9",
     "discord.js": "^14.15.3",
-    "dotenv": "^16.0.1",
-    "express": "~4.16.1",
-    "puppeteer": "^22.14.0"
+    "dotenv": "^16.0.1"
   },
   "devDependencies": {
     "@flydotio/dockerfile": "^0.5.8"

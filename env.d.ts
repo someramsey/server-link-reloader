@@ -1,9 +1,7 @@
 namespace NodeJS {
-    interface ProcessEnv { 
+    interface ProcessEnv {
         readonly RUNTIME_DATA_PATH: string
-        readonly PUPPETEER_USERDATA_PATH: string
-
-        readonly SERVER_CONFIGURE_PAGE: string
+        
         readonly SERVER_CONFIGURATION_ENDPOINT: string
         readonly SERVER_ID: string
 
