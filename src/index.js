@@ -1,7 +1,7 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, Client, GatewayIntentBits, ModalBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
 import "dotenv/config";
 import fs from "fs";
-import puppeteer from "puppeteer";
+// import puppeteer from "puppeteer"; //TODO: enable
 import { buildMessageContent } from "./message.js";
 
 let updateInterval;
@@ -11,7 +11,8 @@ const ALLOWED_USERS = process.env.ALLOWED_USERS.split(",");
 const SERVER_CONFIGURE_PAGE = process.env.SERVER_CONFIGURE_PAGE + "/" + process.env.SERVER_ID;
 const SERVER_CONFIGURATION_ENDPOINT = process.env.SERVER_CONFIGURATION_ENDPOINT + "/" + process.env.SERVER_ID;
 
-const browser = await puppeteer.launch({ headless: true, userDataDir: process.env.PUPPETEER_USERDATA_PATH, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+//TODO: enable
+// const browser = await puppeteer.launch({ headless: true, userDataDir: process.env.PUPPETEER_USERDATA_PATH, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages] });
 
 client.once("ready", () => {
@@ -180,6 +181,7 @@ async function update(updateMessage) {
         return;
     }
 
+    return; //TODO: remove
     const page = await browser.newPage();
 
     try {
