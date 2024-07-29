@@ -44,7 +44,8 @@ async function handleButton(interaction) {
     switch (interaction.customId) {
         case 'dismiss-alert': {
             interaction.client.channels.fetch(interaction.channelId).then((channel) => {
-                if (!channel || channel.type !== ChannelType.GuildText) {
+                if (!channel || !channel.isTextBased()) {
+                    console.error("Failed to handle dismiss-alert interaction, invalid channel type");
                     return;
                 }
                 return channel.messages.fetch(interaction.message.id);
