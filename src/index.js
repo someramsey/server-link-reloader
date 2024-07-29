@@ -1,3 +1,22 @@
+const formatMemoryUsage = (data) => `${Math.round(data / 1024 / 1024 * 100) / 100} MB`;
+
+const memoryData = process.memoryUsage();
+
+setInterval(() => {
+    const memoryUsage = {
+        rss: `${formatMemoryUsage(memoryData.rss)} -> Resident Set Size - total memory allocated for the process execution`,
+        heapTotal: `${formatMemoryUsage(memoryData.heapTotal)} -> total size of the allocated heap`,
+        heapUsed: `${formatMemoryUsage(memoryData.heapUsed)} -> actual memory used during the execution`,
+        external: `${formatMemoryUsage(memoryData.external)} -> V8 external memory`,
+        total: `${formatMemoryUsage(memoryData.rss + memoryData.external)} -> total memory usage`,
+    };
+
+    console.log(memoryUsage);
+}, 2000);
+
+
+
+
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, Client, GatewayIntentBits, ModalBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
 import "dotenv/config";
 import fs from "fs";
@@ -190,11 +209,11 @@ async function update(updateMessage) {
         try {
             await page.goto('https://roblox.com');
             navigated = true;
-        } catch(error) {
+        } catch (error) {
             console.warn(error);
         }
 
-        if(!navigated) {
+        if (!navigated) {
             return;
         }
 
