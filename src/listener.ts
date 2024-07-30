@@ -2,7 +2,8 @@ import * as http from 'http';
 
 const server = http.createServer((req, res) => {
     res.statusCode = 200;
-    res.end();
+    res.setHeader('Content-Type', 'text/plain');
+    res.end('dw');
 });
 
 server.listen(3000, () => {
