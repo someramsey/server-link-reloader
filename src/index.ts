@@ -1,4 +1,5 @@
 import "dotenv/config";
+import "./listener.js"
 import fs from "fs";
 import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, ChannelType, Client, CommandInteraction, GatewayIntentBits, Message, ModalBuilder, ModalSubmitInteraction, TextInputBuilder, TextInputStyle } from "discord.js";
 import { updateMessageContent } from "./message.js";
